@@ -3,47 +3,60 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Author;
 use Illuminate\Http\Request;
 
 class AuthorController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        return response()->json([
+            'success' => true,
+            'data' => Author::with('books')->get(),
+        ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+    public function show($id)
+    {
+        $author = Author::with('books')->find($id);
+        if (!$author) {
+            return response()->json(['success' => false, 'message' => 'Auteur introuvable'], 404);
+        }
+        return response()->json(['success' => true, 'data' => $author]);
+    }
+
     public function store(Request $request)
     {
-        //
+        $data = $request->validate([
+            'first_name'  => 'required|string|max:255',
+            'last_name'   => 'required|string|max:255',
+            'nationality' => 'nullable|string|max:255',
+        ]);
+        return response()->json(['success' => true, 'data' => Author::create($data)], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function update(Request $request, $id)
     {
-        //
+        $author = Author::find($id);
+        if (!$author) {
+            return response()->json(['success' => false, 'message' => 'Auteur introuvable'], 404);
+        }
+        $data = $request->validate([
+            'first_name'  => 'sometimes|string|max:255',
+            'last_name'   => 'sometimes|string|max:255',
+            'nationality' => 'nullable|string|max:255',
+        ]);
+        $author->update($data);
+        return response()->json(['success' => true, 'data' => $author]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function destroy($id)
     {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        $author = Author::find($id);
+        if (!$author) {
+            return response()->json(['success' => false, 'message' => 'Auteur introuvable'], 404);
+        }
+        $author->delete();
+        return response()->json(['success' => true, 'message' => 'Supprimé']);
     }
 }
